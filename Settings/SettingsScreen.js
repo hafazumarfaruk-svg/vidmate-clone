@@ -1,0 +1,125 @@
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+
+// গ্লোবাল মেমরি ডিক্লেয়ারেশন
+global.appSettings = global.appSettings || {};
+global.appSettings.normalVideo = global.appSettings.normalVideo || 'Normal Video Quality';
+global.shortVideoQuality = global.shortVideoQuality || 'Normal Video Quality';
+
+export default function SettingsScreen() {
+  const [isMainQualityExpanded, setIsMainQualityExpanded] = useState(false);
+  const [selectedMainQuality, setSelectedMainQuality] = useState(global.appSettings.normalVideo);
+
+  const [isShortQualityExpanded, setIsShortQualityExpanded] = useState(false);
+  const [selectedShortQuality, setSelectedShortQuality] = useState(global.shortVideoQuality);
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  // সব কোয়ালিটি অপশন (এন্টি ডাটা সেভার মোড সহ)
+  const qualityOptions = [
+      'Anti Data Saver Mode', 
+      'Low Video Quality', 
+      'Normal Video Quality', 
+      'High Video Quality'
+  ];
+
+  const handleMainQualitySelect = (res) => {
+    setIsLoading(true); 
+    setTimeout(() => {
+      global.appSettings.normalVideo = res; 
+      setSelectedMainQuality(res);
+      setIsLoading(false); 
+    }, 800);
+  };
+
+  const handleShortQualitySelect = (res) => {
+    setIsLoading(true); 
+    setTimeout(() => {
+      global.shortVideoQuality = res; 
+      setSelectedShortQuality(res);
+      setIsLoading(false); 
+    }, 800);
+  };
+
+  const ExpandableMenu = ({ icon, label, expanded, onPress }) => (
+    <TouchableOpacity style={styles.listItem} activeOpacity={0.7} onPress={onPress}>
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <Ionicons name={icon} size={24} color="#FFF" style={{ marginRight: 15 }} />
+        <Text style={styles.listText}>{label}</Text>
+      </View>
+      <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={20} color="#AAA" />
+    </TouchableOpacity>
+  );
+
+  const QualityRadioOption = ({ label, selected, onPress }) => (
+    <TouchableOpacity style={styles.radioRow} activeOpacity={0.7} onPress={onPress}>
+      <Text style={[styles.radioText, selected && styles.activeRadioText]}>{label}</Text>
+      <Ionicons name={selected ? "radio-button-on" : "radio-button-off"} size={22} color={selected ? "#3EA6FF" : "#555"} />
+    </TouchableOpacity>
+  );
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <View style={styles.listSection}>
+          
+          {/* লং ভিডিও কোয়ালিটি */}
+          <ExpandableMenu 
+            icon="tv-outline" label="Long Video Quality" 
+            expanded={isMainQualityExpanded} onPress={() => setIsMainQualityExpanded(!isMainQualityExpanded)} 
+          />
+          {isMainQualityExpanded && (
+            <View style={styles.radioGroup}>
+              {qualityOptions.map((opt, index) => (
+                <QualityRadioOption 
+                  key={index} label={opt} selected={selectedMainQuality === opt} onPress={() => handleMainQualitySelect(opt)}
+                />
+              ))}
+            </View>
+          )}
+
+          {/* শর্টস ভিডিও কোয়ালিটি */}
+          <ExpandableMenu 
+            icon="phone-portrait-outline" label="Shorts Video Quality" 
+            expanded={isShortQualityExpanded} onPress={() => setIsShortQualityExpanded(!isShortQualityExpanded)} 
+          />
+          {isShortQualityExpanded && (
+            <View style={styles.radioGroup}>
+              {qualityOptions.map((opt, index) => (
+                <QualityRadioOption 
+                  key={index} label={opt} selected={selectedShortQuality === opt} onPress={() => handleShortQualitySelect(opt)}
+                />
+              ))}
+            </View>
+          )}
+
+        </View>
+      </ScrollView>
+
+      {isLoading && (
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingBox}>
+            <ActivityIndicator size="large" color="#FF0000" />
+            <Text style={styles.loadingText}>Applying Quality...</Text>
+          </View>
+        </View>
+      )}
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#0F0F0F' },
+  scrollContent: { paddingTop: 20, paddingBottom: 30 }, 
+  listSection: { paddingHorizontal: 10 },
+  listItem: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 15, paddingHorizontal: 15 },
+  listText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
+  radioGroup: { backgroundColor: '#111', borderRadius: 8, paddingVertical: 5, paddingHorizontal: 15, marginBottom: 15, marginHorizontal: 15, borderWidth: 1, borderColor: '#222' },
+  radioRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#1A1A1A' },
+  radioText: { color: '#AAA', fontSize: 15 },
+  activeRadioText: { color: '#3EA6FF', fontWeight: 'bold' },
+  loadingOverlay: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', zIndex: 999 },
+  loadingBox: { backgroundColor: '#1E1E1E', padding: 25, borderRadius: 15, alignItems: 'center', borderWidth: 1, borderColor: '#333' },
+  loadingText: { color: '#FFF', marginTop: 15, fontSize: 15, fontWeight: 'bold' }
+});
